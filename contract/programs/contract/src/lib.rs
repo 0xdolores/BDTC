@@ -6,6 +6,8 @@ mod constants;
 use constants::*;
 mod instructions;
 use instructions::*;
+mod error;
+use error::*;
 
 declare_id!("GSP7LL75gEw5EetxyAEjMiy4A9yij5oHEVjuGbjg18yu");
 
@@ -19,5 +21,13 @@ pub mod contract {
 
     pub fn update_config(ctx: Context<UpdateConfig>, min_health_factor: u64) -> Result<()> {
         process_update_config(ctx, min_health_factor)
+    }
+
+    pub fn deposit_collateral_and_mint_tokens(
+        ctx: Context<DepositCollateralMint>,
+        amount_collateral: u64,
+        amount_to_mint: u64,
+    ) -> Result<()> {
+        process_deposit_collateral_and_mint_tokens(ctx, amount_collateral, amount_to_mint)
     }
 }

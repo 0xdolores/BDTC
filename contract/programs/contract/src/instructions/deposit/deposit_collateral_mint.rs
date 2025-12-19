@@ -3,10 +3,11 @@ use anchor_spl::{
     associated_token::AssociatedToken,
     token_interface::{Mint, Token2022, TokenAccount},
 };
+
 use pyth_solana_receiver_sdk::price_update::PriceUpdateV2;
 
 use crate::{
-    instructions::deposit_sol, mint_tokens, Collateral, Config, SEED_COLLATERAL_ACCOUNT,
+    check_health_factor, deposit_sol, mint_tokens, Collateral, Config, SEED_COLLATERAL_ACCOUNT,
     SEED_CONFIG_ACCOUNT, SEED_SOL_ACCOUNT,
 };
 
@@ -61,7 +62,7 @@ pub fn process_deposit_collateral_and_mint_tokens(
 ) -> Result<()> {
     let collateral_account = &mut ctx.accounts.collateral_account;
     collateral_account.lamport_balance = ctx.accounts.sol_account.lamports() + amount_collateral;
-    collateral_account.amout_minted += amount_to_mint;
+    collateral_account.amount_minted += amount_to_mint;
 
     if !collateral_account.is_initialized {
         collateral_account.is_initialized = true;
@@ -70,6 +71,12 @@ pub fn process_deposit_collateral_and_mint_tokens(
         collateral_account.token_account = ctx.accounts.token_account.key();
         collateral_account.bump = ctx.bumps.collateral_account;
     }
+
+    check_health_factor(
+        &ctx.accounts.collateral_account,
+        &ctx.accounts.config_account,
+        &ctx.accounts.price_update,
+    )?;
 
     deposit_sol(
         &ctx.accounts.depositor,
